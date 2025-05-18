@@ -90,9 +90,14 @@ class AutotaskerApp(ctk.CTk):
             new_exe_path = exe_path.with_name("update_temp.exe")
             updater_path = exe_path.with_name("updater.py")
             launcher_path = exe_path.with_name("update_launcher.exe")
+            version_path = exe_path.with_name("version.txt")
 
             # Download the new executable
             with urllib.request.urlopen(UPDATE_EXECUTABLE_URL) as response, open(new_exe_path, 'wb') as out_file:
+                out_file.write(response.read())
+
+            # Download updated version.txt from GitHub
+            with urllib.request.urlopen(REMOTE_VERSION_URL) as response, open(version_path, 'wb') as out_file:
                 out_file.write(response.read())
 
             # Download updater.py if it doesn't exist
@@ -118,6 +123,8 @@ class AutotaskerApp(ctk.CTk):
         except Exception as e:
             self.status_var.set("❌ Update failed")
             messagebox.showerror("Update Error", str(e))
+
+
 
     def show_home(self):
         self.clear_main_frame()
