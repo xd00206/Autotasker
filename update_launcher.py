@@ -22,10 +22,16 @@ time.sleep(6)  # Gives OS time to release the EXE
 log(f"[🚀] Launching updater.py with {old_exe} and {new_exe}")
 
 try:
-    python_exe = shutil.which("python") or shutil.which("python3")
+    # Best reliability: use py.exe first, then fallback to python/python3
+    python_exe = os.path.join(os.environ.get("SystemRoot", "C:\\Windows"), "py.exe")
+    if not os.path.exists(python_exe):
+        python_exe = shutil.which("python") or shutil.which("python3")
+
     if not python_exe:
-        raise RuntimeError("Python executable not found in PATH.")
+        raise RuntimeError("❌ Could not find a Python interpreter to run updater.py")
+
     subprocess.run([python_exe, "updater.py", old_exe, new_exe], check=True)
+
 except Exception as e:
     log(f"[❌] Failed to run updater.py: {e}")
     sys.exit(1)
