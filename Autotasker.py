@@ -14,8 +14,6 @@ VERSION_FILE = "version.txt"
 REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
 UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.2.0/Autotasker.exe"
 
-
-
 class AutotaskerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
