@@ -81,7 +81,7 @@ class AutotaskerApp(ctk.CTk):
         else:
             messagebox.showinfo("Up to Date", f"You are using the latest version: {current}")
 
-   def download_and_replace_exe(self):
+    def download_and_replace_exe(self):
         try:
             self.status_var.set("📂 Downloading update...")
             exe_path = Path(sys.argv[0]).resolve()
