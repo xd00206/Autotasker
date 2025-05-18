@@ -11,13 +11,13 @@ ctk.set_default_color_theme("dark-blue")
 POWERSHELL_PATH = r"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 JUNK_FILE_SIZE = 10737418240  # 10 GB
 VERSION_FILE = "version.txt"
-REMOTE_VERSION_URL = REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
+REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
+UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.1.0/ps_runner.exe"
 
 class PowerShellRunnerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        version = self.get_local_version()
-        self.title(f"🖥️ PowerShell Runner v{version}")
+        self.title("🖥️ PowerShell Runner v1.1.0")
         self.geometry("1100x750")
 
         self.status_var = ctk.StringVar(value="✅ Ready")
@@ -65,33 +65,32 @@ class PowerShellRunnerApp(ctk.CTk):
         except Exception as e:
             return f"Error checking version: {e}"
 
-    import sys  # add to top of script if not already
+    def check_for_updates(self):
+        current = self.get_local_version()
+        latest = self.fetch_remote_version()
 
-UPDATE_DOWNLOAD_URL = "https://github.com/xd00206/Autotasker/releases/download/1.1.0/ps_runner.exe"
-DOWNLOADED_UPDATE = "ps_runner_updated.exe"
+        if latest.startswith("Error"):
+            messagebox.showerror("Update Check Failed", latest)
+        elif latest > current:
+            if messagebox.askyesno("Update Available", f"New version {latest} available! (Current: {current})\nDownload and replace now?"):
+                self.download_and_replace_exe()
+        else:
+            messagebox.showinfo("Up to Date", f"You are using the latest version: {current}")
 
-def check_for_updates(self):
-    current = self.get_local_version()
-    latest = self.fetch_remote_version()
+    def download_and_replace_exe(self):
+        try:
+            self.status_var.set("📂 Downloading update...")
+            exe_path = Path(__file__).resolve()
+            new_exe_path = exe_path.with_name("update_temp.exe")
 
-    if latest.startswith("Error"):
-        messagebox.showerror("Update Check Failed", latest)
-        return
+            with urllib.request.urlopen(UPDATE_EXECUTABLE_URL) as response, open(new_exe_path, 'wb') as out_file:
+                out_file.write(response.read())
 
-    if latest > current:
-        if messagebox.askyesno("Update Available", f"New version {latest} available!\n(Current: {current})\nDownload and install now?"):
-            try:
-                self.status_var.set("⬇️ Downloading update...")
-                with urllib.request.urlopen(UPDATE_DOWNLOAD_URL) as response, open(DOWNLOADED_UPDATE, 'wb') as out_file:
-                    out_file.write(response.read())
-                self.status_var.set("✅ Update downloaded successfully.")
-                messagebox.showinfo("Update Ready", f"Update downloaded to {DOWNLOADED_UPDATE}.\nPlease close the app and run the new file manually.")
-            except Exception as e:
-                self.status_var.set("❌ Update failed")
-                messagebox.showerror("Download Error", str(e))
-    else:
-        messagebox.showinfo("Up to Date", f"You are using the latest version: {current}")
-
+            messagebox.showinfo("Update Ready", "Update downloaded. Please close this app. Rename 'update_temp.exe' to 'ps_runner.exe' manually to apply update.")
+            self.status_var.set("✅ Update downloaded")
+        except Exception as e:
+            self.status_var.set("❌ Update failed")
+            messagebox.showerror("Update Error", str(e))
 
     def show_home(self):
         self.clear_main_frame()
