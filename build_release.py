@@ -36,8 +36,18 @@ def move_to_release():
     RELEASE_DIR.mkdir(exist_ok=True)
     src = DIST_DIR / EXE_NAME
     dst = RELEASE_DIR / EXE_NAME
+
+    if dst.exists():
+        try:
+            os.remove(dst)
+            print(f"[🗑️] Old {dst.name} removed.")
+        except PermissionError:
+            print(f"[❌] Cannot overwrite {dst}. Please close the app and try again.")
+            return
+
     shutil.copy2(src, dst)
     print(f"[✅] Build complete: {dst}")
+
 
 def copy_updater():
     print("[📁] Copying updater.py...")
