@@ -1,0 +1,27 @@
+# Build directories
+build/
+dist/
+release/
+__pycache__/
+
+# Executables
+*.exe
+
+# Python cache files
+*.pyc
+*.pyo
+
+# Logs and temporary files
+*.log
+tree_log.txt
+
+# PyInstaller spec files
+*.spec
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/editor configs (optional)
+.vscode/
+.idea/
