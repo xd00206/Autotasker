@@ -65,16 +65,33 @@ class PowerShellRunnerApp(ctk.CTk):
         except Exception as e:
             return f"Error checking version: {e}"
 
-    def check_for_updates(self):
-        current = self.get_local_version()
-        latest = self.fetch_remote_version()
+    import sys  # add to top of script if not already
 
-        if latest.startswith("Error"):
-            messagebox.showerror("Update Check Failed", latest)
-        elif latest > current:
-            messagebox.showinfo("Update Available", f"New version {latest} available! (Current: {current})")
-        else:
-            messagebox.showinfo("Up to Date", f"You are using the latest version: {current}")
+UPDATE_DOWNLOAD_URL = "https://github.com/xd00206/Autotasker/releases/download/1.1.0/ps_runner.exe"
+DOWNLOADED_UPDATE = "ps_runner_updated.exe"
+
+def check_for_updates(self):
+    current = self.get_local_version()
+    latest = self.fetch_remote_version()
+
+    if latest.startswith("Error"):
+        messagebox.showerror("Update Check Failed", latest)
+        return
+
+    if latest > current:
+        if messagebox.askyesno("Update Available", f"New version {latest} available!\n(Current: {current})\nDownload and install now?"):
+            try:
+                self.status_var.set("⬇️ Downloading update...")
+                with urllib.request.urlopen(UPDATE_DOWNLOAD_URL) as response, open(DOWNLOADED_UPDATE, 'wb') as out_file:
+                    out_file.write(response.read())
+                self.status_var.set("✅ Update downloaded successfully.")
+                messagebox.showinfo("Update Ready", f"Update downloaded to {DOWNLOADED_UPDATE}.\nPlease close the app and run the new file manually.")
+            except Exception as e:
+                self.status_var.set("❌ Update failed")
+                messagebox.showerror("Download Error", str(e))
+    else:
+        messagebox.showinfo("Up to Date", f"You are using the latest version: {current}")
+
 
     def show_home(self):
         self.clear_main_frame()
