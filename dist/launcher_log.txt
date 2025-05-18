@@ -1,2 +1,0 @@
-Usage: update_launcher.exe <old_exe_path> <new_exe_path>
-Usage: update_launcher.exe <old_exe_path> <new_exe_path>

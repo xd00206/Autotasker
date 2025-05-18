@@ -9,7 +9,7 @@ BUILD_DIR = PROJECT_DIR / "build"
 SPEC_FILE = PROJECT_DIR / "Autotasker.spec"
 RELEASE_DIR = PROJECT_DIR / "release"
 EXE_NAME = "Autotasker.exe"
-SOURCE_FILE = "autotasker.py"  # ← Make sure this matches your main .py file
+SOURCE_FILE = "autotasker.py"
 
 def clean_old_builds():
     print("[🧹] Cleaning old builds...")
@@ -21,12 +21,13 @@ def clean_old_builds():
                 path.unlink()
 
 def build_exe():
-    print("[🛠️] Building .exe...")
+    print("[🛠️] Building .exe with hidden encoding fix...")
     subprocess.run([
         "pyinstaller", 
         "--onefile", 
         "--noconsole", 
         "--name", "Autotasker", 
+        "--hidden-import=encodings.idna",
         SOURCE_FILE
     ], check=True)
 
@@ -45,14 +46,21 @@ def copy_updater():
     if updater_src.exists():
         shutil.copy2(updater_src, updater_dst)
         print(f"[✅] Copied to: {updater_dst}")
-    else:
-        print("[⚠️] updater.py not found. Skipping copy.")
+
+def copy_update_launcher():
+    print("[📁] Copying update_launcher.exe...")
+    src = PROJECT_DIR / "dist" / "update_launcher.exe"
+    dst = RELEASE_DIR / "update_launcher.exe"
+    if src.exists():
+        shutil.copy2(src, dst)
+        print("[✅] Copied to release folder.")
 
 def main():
     clean_old_builds()
     build_exe()
     move_to_release()
     copy_updater()
+    copy_update_launcher()
 
 if __name__ == "__main__":
     main()

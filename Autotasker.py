@@ -89,25 +89,31 @@ class AutotaskerApp(ctk.CTk):
             exe_path = Path(sys.argv[0]).resolve()
             new_exe_path = exe_path.with_name("update_temp.exe")
             updater_path = exe_path.with_name("updater.py")
+            launcher_path = exe_path.with_name("update_launcher.exe")
 
+            # Download the new executable
             with urllib.request.urlopen(UPDATE_EXECUTABLE_URL) as response, open(new_exe_path, 'wb') as out_file:
                 out_file.write(response.read())
 
+            # Download updater.py if it doesn't exist
             if not updater_path.exists():
                 urllib.request.urlretrieve(
                     "https://raw.githubusercontent.com/xd00206/Autotasker/main/updater.py",
                     updater_path
                 )
 
-            launcher_path = exe_path.with_name("update_launcher.exe")
+            # Check if update_launcher.exe exists
+            if not launcher_path.exists():
+                messagebox.showerror("Missing File", f"update_launcher.exe not found at:\n{launcher_path}")
+                return
 
-if not launcher_path.exists():
-    messagebox.showerror("Missing File", f"update_launcher.exe not found at:\n{launcher_path}")
-    return
+            # Launch the external update launcher
+            subprocess.Popen(
+                [str(launcher_path), str(exe_path), str(new_exe_path)],
+                shell=True
+            )
 
-subprocess.Popen([str(launcher_path), str(exe_path), str(new_exe_path)], shell=True)
-
-            self.quit()
+            self.after(1000, self.quit)  # Delay quit for safety
 
         except Exception as e:
             self.status_var.set("❌ Update failed")
