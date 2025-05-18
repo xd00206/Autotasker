@@ -12,7 +12,7 @@ POWERSHELL_PATH = r"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.e
 JUNK_FILE_SIZE = 10737418240  # 10 GB
 VERSION_FILE = "version.txt"
 REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
-UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.1.0/ps_runner.exe"
+UPDATE_EXECUTABLE_URL = UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.2.0/ps_runner_1.2.0.exe"
 
 class PowerShellRunnerApp(ctk.CTk):
     def __init__(self):
@@ -56,7 +56,11 @@ class PowerShellRunnerApp(ctk.CTk):
 
     def get_local_version(self):
         version_path = Path(VERSION_FILE)
-        return version_path.read_text().strip() if version_path.exists() else "0.0.0"
+        try:
+            return version_path.read_text().strip() if version_path.exists() else "0.0.0"
+        except Exception as e:
+            self.status_var.set("❌ Failed to read local version")
+            return "0.0.0"
 
     def fetch_remote_version(self):
         try:
@@ -241,4 +245,5 @@ class PowerShellRunnerApp(ctk.CTk):
 
 if __name__ == "__main__":
     app = PowerShellRunnerApp()
+    app.show_home()  # ← Safe now — the method is fully defined
     app.mainloop()
