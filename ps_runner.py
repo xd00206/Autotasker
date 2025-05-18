@@ -16,7 +16,8 @@ REMOTE_VERSION_URL = "https://yourdomain.com/latest_version.txt"  # Replace with
 class PowerShellRunnerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("🖥️ PowerShell Runner")
+        version = self.get_local_version()
+        self.title(f"🖥️ PowerShell Runner v{version}")
         self.geometry("1100x750")
 
         self.status_var = ctk.StringVar(value="✅ Ready")
