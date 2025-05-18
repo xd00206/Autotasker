@@ -12,7 +12,7 @@ POWERSHELL_PATH = r"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.e
 JUNK_FILE_SIZE = 10737418240  # 10 GB
 VERSION_FILE = "version.txt"
 REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
-UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.2.0/Autotasker_1.2.0.exe"
+UPDATE_EXECUTABLE_URL = UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.2.0/Autotasker.exe"
 
 class AutotaskerApp(ctk.CTk):
     def __init__(self):

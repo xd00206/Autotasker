@@ -6,9 +6,10 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).parent
 DIST_DIR = PROJECT_DIR / "dist"
 BUILD_DIR = PROJECT_DIR / "build"
-SPEC_FILE = PROJECT_DIR / "ps_runner.spec"
+SPEC_FILE = PROJECT_DIR / "Autotasker.spec"
 RELEASE_DIR = PROJECT_DIR / "release"
-EXE_NAME = "ps_runner.exe"
+EXE_NAME = "Autotasker.exe"
+SOURCE_FILE = "autotasker.py"  # ← Make sure this matches your main .py file
 
 def clean_old_builds():
     print("[🧹] Cleaning old builds...")
@@ -21,7 +22,13 @@ def clean_old_builds():
 
 def build_exe():
     print("[🛠️] Building .exe...")
-    subprocess.run(["pyinstaller", "--onefile", "--noconsole", "ps_runner.py"], check=True)
+    subprocess.run([
+        "pyinstaller", 
+        "--onefile", 
+        "--noconsole", 
+        "--name", "Autotasker", 
+        SOURCE_FILE
+    ], check=True)
 
 def move_to_release():
     print("[📦] Moving built .exe to release folder...")
