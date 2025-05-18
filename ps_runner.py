@@ -12,12 +12,12 @@ POWERSHELL_PATH = r"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.e
 JUNK_FILE_SIZE = 10737418240  # 10 GB
 VERSION_FILE = "version.txt"
 REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
-UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.2.0/ps_runner_1.2.0.exe"
+UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download/1.2.0/Autotasker_1.2.0.exe"
 
-class PowerShellRunnerApp(ctk.CTk):
+class AutotaskerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("🖥️ PowerShell Runner")
+        self.title("🖥️ Autotasker")
         self.geometry("1100x750")
 
         self.status_var = ctk.StringVar(value="✅ Ready")
@@ -34,7 +34,7 @@ class PowerShellRunnerApp(ctk.CTk):
         self.show_home()
 
     def create_sidebar(self):
-        ctk.CTkLabel(self.sidebar, text="⚡ PowerShell", font=("Consolas", 18)).pack(pady=(20, 10))
+        ctk.CTkLabel(self.sidebar, text="⚡ Autotasker", font=("Consolas", 18)).pack(pady=(20, 10))
         nav_buttons = [
             ("🏠 Home", self.show_home),
             ("🧰 Tweaks", self.show_tweaks),
@@ -90,7 +90,7 @@ class PowerShellRunnerApp(ctk.CTk):
             with urllib.request.urlopen(UPDATE_EXECUTABLE_URL) as response, open(new_exe_path, 'wb') as out_file:
                 out_file.write(response.read())
 
-            messagebox.showinfo("Update Ready", "Update downloaded. Please close this app. Rename 'update_temp.exe' to 'ps_runner.exe' manually to apply update.")
+            messagebox.showinfo("Update Ready", "Update downloaded. Please close this app. Rename 'update_temp.exe' to 'Autotasker.exe' manually to apply update.")
             self.status_var.set("✅ Update downloaded")
         except Exception as e:
             self.status_var.set("❌ Update failed")
@@ -244,5 +244,5 @@ class PowerShellRunnerApp(ctk.CTk):
         """, custom_label="Tweak: Secure Wipe")
 
 if __name__ == "__main__":
-    app = PowerShellRunnerApp()
+    app = AutotaskerApp()
     app.mainloop()
