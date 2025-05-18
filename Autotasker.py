@@ -81,20 +81,41 @@ class AutotaskerApp(ctk.CTk):
         else:
             messagebox.showinfo("Up to Date", f"You are using the latest version: {current}")
 
-    def download_and_replace_exe(self):
+   def download_and_replace_exe(self):
         try:
             self.status_var.set("📂 Downloading update...")
-            exe_path = Path(__file__).resolve()
+            exe_path = Path(sys.argv[0]).resolve()
             new_exe_path = exe_path.with_name("update_temp.exe")
+            bat_path = exe_path.with_name("update_script.bat")
 
+            # Download the update
             with urllib.request.urlopen(UPDATE_EXECUTABLE_URL) as response, open(new_exe_path, 'wb') as out_file:
                 out_file.write(response.read())
 
-            messagebox.showinfo("Update Ready", "Update downloaded. Please close this app. Rename 'update_temp.exe' to 'Autotasker.exe' manually to apply update.")
-            self.status_var.set("✅ Update downloaded")
+            # Create a batch file that waits for this app to close, then replaces and relaunches it
+            bat_content = f"""@echo off
+timeout /t 3 /nobreak > nul
+:loop
+tasklist | findstr /i "{exe_path.name}" > nul
+if not errorlevel 1 (
+    timeout /t 1 > nul
+    goto loop
+)
+move /y "{new_exe_path.name}" "{exe_path.name}"
+start "" "{exe_path.name}"
+del "%~f0"
+"""
+            bat_path.write_text(bat_content)
+
+            # Run the batch file and exit this app
+            subprocess.Popen(["cmd", "/c", str(bat_path)], shell=True)
+            self.quit()
+
         except Exception as e:
             self.status_var.set("❌ Update failed")
             messagebox.showerror("Update Error", str(e))
+
+
 
     def show_home(self):
         self.clear_main_frame()
