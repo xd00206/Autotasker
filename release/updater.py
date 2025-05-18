@@ -13,6 +13,10 @@ def wait_for_process_to_close(target_exe):
         time.sleep(1)
     print("[✅] Target application closed.")
 
+def ensure_temp_folder_is_cleared():
+    print("[⌛] Waiting for PyInstaller temp folder cleanup...")
+    time.sleep(5)
+
 def replace_and_restart(old_exe, new_exe):
     print(f"[🛠️] Replacing {old_exe} with {new_exe}")
     shutil.move(new_exe, old_exe)
@@ -20,12 +24,18 @@ def replace_and_restart(old_exe, new_exe):
     subprocess.Popen([old_exe], shell=True)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python updater.py <old_exe_path> <new_exe_path>")
-        sys.exit(1)
+    try:
+        if len(sys.argv) != 3:
+            raise ValueError("Usage: python updater.py <old_exe_path> <new_exe_path>")
 
-    old_exe_path = sys.argv[1]
-    new_exe_path = sys.argv[2]
+        old_exe_path = sys.argv[1]
+        new_exe_path = sys.argv[2]
 
-    wait_for_process_to_close(old_exe_path)
-    replace_and_restart(old_exe_path, new_exe_path)
+        wait_for_process_to_close(old_exe_path)
+        ensure_temp_folder_is_cleared()
+        replace_and_restart(old_exe_path, new_exe_path)
+
+    except Exception as e:
+        with open("update_error.log", "w") as f:
+            f.write(str(e))
+        input("❌ An error occurred. Press Enter to close.")

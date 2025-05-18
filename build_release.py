@@ -38,10 +38,21 @@ def move_to_release():
     shutil.copy2(src, dst)
     print(f"[✅] Build complete: {dst}")
 
+def copy_updater():
+    print("[📁] Copying updater.py...")
+    updater_src = PROJECT_DIR / "updater.py"
+    updater_dst = RELEASE_DIR / "updater.py"
+    if updater_src.exists():
+        shutil.copy2(updater_src, updater_dst)
+        print(f"[✅] Copied to: {updater_dst}")
+    else:
+        print("[⚠️] updater.py not found. Skipping copy.")
+
 def main():
     clean_old_builds()
     build_exe()
     move_to_release()
+    copy_updater()
 
 if __name__ == "__main__":
     main()

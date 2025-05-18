@@ -14,8 +14,7 @@ def wait_for_process_to_close(target_exe):
     print("[✅] Target application closed.")
 
 def ensure_temp_folder_is_cleared():
-    # Wait a bit to let PyInstaller clean up its temp _MEI folder
-    print("[⌛] Waiting for PyInstaller temp folder to be cleaned...")
+    print("[⌛] Waiting for PyInstaller temp folder cleanup...")
     time.sleep(5)
 
 def replace_and_restart(old_exe, new_exe):

@@ -99,7 +99,14 @@ class AutotaskerApp(ctk.CTk):
                     updater_path
                 )
 
-            subprocess.Popen(["python", str(updater_path), str(exe_path), str(new_exe_path)], shell=True)
+            launcher_path = exe_path.with_name("update_launcher.exe")
+
+if not launcher_path.exists():
+    messagebox.showerror("Missing File", f"update_launcher.exe not found at:\n{launcher_path}")
+    return
+
+subprocess.Popen([str(launcher_path), str(exe_path), str(new_exe_path)], shell=True)
+
             self.quit()
 
         except Exception as e:
