@@ -11,7 +11,7 @@ ctk.set_default_color_theme("dark-blue")
 POWERSHELL_PATH = r"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 JUNK_FILE_SIZE = 10737418240  # 10 GB
 VERSION_FILE = "version.txt"
-REMOTE_VERSION_URL = "https://yourdomain.com/latest_version.txt"  # Replace with your real URL
+REMOTE_VERSION_URL = REMOTE_VERSION_URL = "https://raw.githubusercontent.com/xd00206/Autotasker/main/version.txt"
 
 class PowerShellRunnerApp(ctk.CTk):
     def __init__(self):
