@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 import customtkinter as ctk
 from tkinter import messagebox
+import psutil
+import platform
+from datetime import datetime
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -24,6 +27,7 @@ class AutotaskerApp(ctk.CTk):
 
         self.status_var = ctk.StringVar(value="✅ Ready")
         self.developer_mode = ctk.BooleanVar(value=False)
+        self.wipe_mode = ctk.StringVar(value="Standard Wipe (3 passes)")
 
         self.sidebar = ctk.CTkFrame(self, width=200)
         self.sidebar.pack(side="left", fill="y")
@@ -33,11 +37,12 @@ class AutotaskerApp(ctk.CTk):
 
         self.create_sidebar()
         self.create_status_bar()
-        self.show_home()
+        self.show_dashboard()
 
     def create_sidebar(self):
         ctk.CTkLabel(self.sidebar, text="⚡ Autotasker", font=("Consolas", 18)).pack(pady=(20, 10))
         nav_buttons = [
+            ("📊 Dashboard", self.show_dashboard),
             ("🏠 Home", self.show_home),
             ("🧰 Tweaks", self.show_tweaks),
             ("📜 Logs", self.show_logs),
@@ -45,6 +50,37 @@ class AutotaskerApp(ctk.CTk):
         ]
         for label, command in nav_buttons:
             ctk.CTkButton(self.sidebar, text=label, command=command).pack(pady=5, padx=10, fill="x")
+
+    def show_dashboard(self):
+        self.clear_main_frame()
+
+        stats = {
+            "🧠 CPU Usage": f"{psutil.cpu_percent()}%",
+            "💾 Memory Usage": f"{psutil.virtual_memory().percent}%",
+            "🗄️ Disk Usage (C:)": f"{psutil.disk_usage('C:\\').percent}%",
+            "⏳ Uptime": time.strftime('%H:%M:%S', time.gmtime(time.time() - psutil.boot_time())),
+            "🖥️ OS": platform.platform(),
+            "🔢 Version": self.get_local_version(),
+            "📅 Last Update Check": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "⚙️ Background Processes": str(len(list(psutil.process_iter()))),
+        }
+
+        try:
+            result = subprocess.run(
+                [POWERSHELL_PATH, "-Command", "Get-WindowsUpdate -ErrorAction SilentlyContinue"],
+                capture_output=True, text=True
+            )
+            stats["🪟 Windows Update"] = "⚠️ Pending" if result.stdout.strip() else "✅ Up-to-date"
+        except Exception:
+            stats["🪟 Windows Update"] = "❓ Unknown"
+
+        for label, value in stats.items():
+            row = ctk.CTkFrame(self.main_frame)
+            row.pack(pady=5, padx=20, fill="x")
+            ctk.CTkLabel(row, text=label + ":", anchor="w", width=220).pack(side="left")
+            ctk.CTkLabel(row, text=value, anchor="e").pack(side="right")
+
+        ctk.CTkButton(self.main_frame, text="🔄 Refresh Dashboard", command=self.show_dashboard).pack(pady=20)
 
     def create_status_bar(self):
         status_bar = ctk.CTkFrame(self, height=30)
@@ -172,15 +208,25 @@ class AutotaskerApp(ctk.CTk):
 
     def show_settings(self):
         self.clear_main_frame()
+        
         ctk.CTkLabel(self.main_frame, text="⚙️ Settings").pack(pady=(10, 5))
+        
         ctk.CTkCheckBox(
             self.main_frame,
             text="Enable Developer Mode (show output/timing/errors)",
             variable=self.developer_mode
         ).pack(pady=10, padx=20, anchor="w")
-
+        
         ctk.CTkLabel(self.main_frame, text=f"Version: {self.get_local_version()}").pack(pady=(20, 5))
         ctk.CTkButton(self.main_frame, text="Check for Updates", command=self.check_for_updates).pack(pady=5)
+        
+        # 🔐 Wipe Security Level Selector
+        ctk.CTkLabel(self.main_frame, text="🛡️ Wipe Security Level").pack(pady=(30, 5))
+        ctk.CTkOptionMenu(
+            self.main_frame,
+            variable=self.wipe_mode,
+            values=["Quick Wipe (1 pass)", "Standard Wipe (3 passes)", "Military Grade (6 passes)"]
+        ).pack(pady=5)
 
     def run_command(self, command, entry=None, custom_label=None):
         if not command.strip():
@@ -250,28 +296,35 @@ class AutotaskerApp(ctk.CTk):
         Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\\Directory\\Background\\shell\\Open PowerShell Here\\command" -Name "(default)" -Value "powershell.exe"
         """, custom_label="Tweak: Add Context Menu")
 
+    def tweak_empty_bin(self):
+        if not messagebox.askyesno("Empty Recycle Bin", "This will permanently delete all files in the Recycle Bin. Proceed?"):
+            return
+        self.run_command("Clear-RecycleBin -Force", custom_label="Tweak: Empty Recycle Bin")
+
+
     def tweak_clean_temp(self):
+        if not messagebox.askyesno("Clean Temp Files", "This will delete temporary files. Proceed?"):
+            return
         self.run_command("""
         Remove-Item -Path "$env:TEMP\\*" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "C:\\Windows\\Temp\\*" -Recurse -Force -ErrorAction SilentlyContinue
         """, custom_label="Tweak: Clean Temp Files")
 
-    def tweak_empty_bin(self):
-        self.run_command("""
-        (New-Object -ComObject Shell.Application).NameSpace(0xA).Items() | ForEach-Object { $_.InvokeVerb("delete") }
-        """, custom_label="Tweak: Empty Recycle Bin")
-
     def tweak_secure_wipe(self):
-        if not messagebox.askyesno("Confirm Secure Wipe", "This will write/delete ~60GB of junk. Proceed?"):
+        level = self.wipe_mode.get()
+        passes = {"Quick Wipe (1 pass)": 1, "Standard Wipe (3 passes)": 3, "Military Grade (6 passes)": 6}.get(level, 3)
+
+        if not messagebox.askyesno("Confirm Secure Wipe", f"This will write/delete ~{passes*10}GB of junk. Proceed?"):
             return
+
         self.run_command(f"""
-        for ($i = 1; $i -le 6; $i++) {{
-            Write-Output "Pass $i of 6 - Overwriting free space..."
+        for ($i = 1; $i -le {passes}; $i++) {{
+            Write-Output "Pass $i of {passes} - Overwriting free space..."
             $junk = "$env:TEMP\\junkfile_$i.tmp"
             fsutil file createnew $junk {JUNK_FILE_SIZE}
             Remove-Item $junk -Force
         }}
-        """, custom_label="Tweak: Secure Wipe")
+        """, custom_label=f"Tweak: Secure Wipe ({level})")
 
 if __name__ == "__main__":
     app = AutotaskerApp()
