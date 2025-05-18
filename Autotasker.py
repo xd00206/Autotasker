@@ -1,6 +1,8 @@
 import subprocess
 import time
 import urllib.request
+import os
+import sys
 from pathlib import Path
 import customtkinter as ctk
 from tkinter import messagebox
@@ -58,7 +60,7 @@ class AutotaskerApp(ctk.CTk):
         version_path = Path(VERSION_FILE)
         try:
             return version_path.read_text().strip() if version_path.exists() else "0.0.0"
-        except Exception as e:
+        except Exception:
             self.status_var.set("❌ Failed to read local version")
             return "0.0.0"
 
@@ -86,36 +88,23 @@ class AutotaskerApp(ctk.CTk):
             self.status_var.set("📂 Downloading update...")
             exe_path = Path(sys.argv[0]).resolve()
             new_exe_path = exe_path.with_name("update_temp.exe")
-            bat_path = exe_path.with_name("update_script.bat")
+            updater_path = exe_path.with_name("updater.py")
 
-            # Download the update
             with urllib.request.urlopen(UPDATE_EXECUTABLE_URL) as response, open(new_exe_path, 'wb') as out_file:
                 out_file.write(response.read())
 
-            # Create a batch file that waits for this app to close, then replaces and relaunches it
-            bat_content = f"""@echo off
-timeout /t 3 /nobreak > nul
-:loop
-tasklist | findstr /i "{exe_path.name}" > nul
-if not errorlevel 1 (
-    timeout /t 1 > nul
-    goto loop
-)
-move /y "{new_exe_path.name}" "{exe_path.name}"
-start "" "{exe_path.name}"
-del "%~f0"
-"""
-            bat_path.write_text(bat_content)
+            if not updater_path.exists():
+                urllib.request.urlretrieve(
+                    "https://raw.githubusercontent.com/xd00206/Autotasker/main/updater.py",
+                    updater_path
+                )
 
-            # Run the batch file and exit this app
-            subprocess.Popen(["cmd", "/c", str(bat_path)], shell=True)
+            subprocess.Popen(["python", str(updater_path), str(exe_path), str(new_exe_path)], shell=True)
             self.quit()
 
         except Exception as e:
             self.status_var.set("❌ Update failed")
             messagebox.showerror("Update Error", str(e))
-
-
 
     def show_home(self):
         self.clear_main_frame()
