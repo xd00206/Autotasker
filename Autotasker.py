@@ -9,6 +9,10 @@ from tkinter import messagebox
 import psutil
 import platform
 from datetime import datetime
+import security_check
+import cve_report
+
+
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -25,31 +29,42 @@ class AutotaskerApp(ctk.CTk):
         self.title("🖥️ Autotasker")
         self.geometry("1100x750")
 
+        # Status box setup
         self.status_var = ctk.StringVar(value="✅ Ready")
+        
         self.developer_mode = ctk.BooleanVar(value=False)
         self.wipe_mode = ctk.StringVar(value="Standard Wipe (3 passes)")
 
+        # Create main frame
         self.sidebar = ctk.CTkFrame(self, width=200)
         self.sidebar.pack(side="left", fill="y")
 
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(side="right", expand=True, fill="both")
 
-        self.create_sidebar()
-        self.create_status_bar()
-        self.show_dashboard()
+        self.create_sidebar()  # Sidebar with buttons
+        self.create_status_box()  # Create the status box at the top
+        self.show_dashboard()  # Initial screen when app is started
 
     def create_sidebar(self):
         ctk.CTkLabel(self.sidebar, text="⚡ Autotasker", font=("Consolas", 18)).pack(pady=(20, 10))
+        
         nav_buttons = [
             ("📊 Dashboard", self.show_dashboard),
             ("🏠 Home", self.show_home),
-            ("🧰 Tweaks", self.show_tweaks),
             ("📜 Logs", self.show_logs),
-            ("⚙️ Settings", self.show_settings)
+            ("⚙️ Settings", self.show_settings),
+            ("🛡️ Security Check", lambda: security_check.load_view(self.main_frame, self.update_status_message)),
+            ("🛡️ CVE Scanner", lambda: cve_report.load_view(self.main_frame, self.update_status_message)),
         ]
+       
         for label, command in nav_buttons:
             ctk.CTkButton(self.sidebar, text=label, command=command).pack(pady=5, padx=10, fill="x")
+
+    def create_status_box(self):
+            """ Create a status box at the top of the main frame """
+            self.status_label = ctk.CTkLabel(self.main_frame, textvariable=self.status_var, anchor="w", wraplength=900, font=("Consolas", 14))
+            self.status_label.pack(pady=10, padx=10, fill="x")  # Place it at the top of the screen
 
     def show_dashboard(self):
         self.clear_main_frame()
@@ -82,11 +97,13 @@ class AutotaskerApp(ctk.CTk):
 
         ctk.CTkButton(self.main_frame, text="🔄 Refresh Dashboard", command=self.show_dashboard).pack(pady=20)
 
-    def create_status_bar(self):
-        status_bar = ctk.CTkFrame(self, height=30)
-        status_bar.pack(side="bottom", fill="x")
-        self.status_label = ctk.CTkLabel(status_bar, textvariable=self.status_var, anchor="w")
-        self.status_label.pack(side="left", padx=10)
+    def copy_to_clipboard(self, event):
+        text = self.status_var.get()
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.update()  # Keep the app responsive
+        messagebox.showinfo("Copied", "Status copied to clipboard!")
+
 
     def clear_main_frame(self):
         for widget in self.main_frame.winfo_children():
@@ -188,16 +205,25 @@ class AutotaskerApp(ctk.CTk):
         ctk.CTkLabel(update_frame, text="Installs Windows Updates using PSWindowsUpdate module.").pack(anchor="w")
         ctk.CTkButton(update_frame, text="🪟 Run Windows Update", command=self.run_windows_update).pack(anchor="w", pady=5)
 
-    def show_tweaks(self):
-        self.clear_main_frame()
-        tweaks = [
-            ("📂 Add PowerShell to Context Menu", self.tweak_add_context_menu),
-            ("🧹 Clean Temp Files", self.tweak_clean_temp),
-            ("🗑️ Empty Recycle Bin", self.tweak_empty_bin),
-            ("🔐 Secure Wipe Free Space", self.tweak_secure_wipe)
-        ]
-        for label, func in tweaks:
-            ctk.CTkButton(self.main_frame, text=label, command=func).pack(pady=8, padx=20, fill="x")
+        # Tweaks Frame
+        tweaks_frame = ctk.CTkFrame(self.main_frame)
+        tweaks_frame.pack(padx=10, pady=10, fill="x")
+
+        # 🧹 Clean Temp Files
+        ctk.CTkLabel(tweaks_frame, text="🧹 Clean Temp Files", font=("Consolas", 13)).pack(anchor="w", pady=(10, 0))
+        ctk.CTkLabel(tweaks_frame, text="Deletes files from %TEMP% and C:\\Windows\\Temp folders.").pack(anchor="w")
+        ctk.CTkButton(tweaks_frame, text="🧹 Run Temp Cleaner", command=self.tweak_clean_temp).pack(anchor="w", pady=5)
+
+        # 🗑️ Empty Recycle Bin
+        ctk.CTkLabel(tweaks_frame, text="🗑️ Empty Recycle Bin", font=("Consolas", 13)).pack(anchor="w", pady=(15, 0))
+        ctk.CTkLabel(tweaks_frame, text="Permanently deletes all files from the Recycle Bin.").pack(anchor="w")
+        ctk.CTkButton(tweaks_frame, text="🗑️ Empty Bin", command=self.tweak_empty_bin).pack(anchor="w", pady=5)
+
+        # 🔐 Secure Wipe
+        ctk.CTkLabel(tweaks_frame, text="🔐 Secure Wipe Free Space", font=("Consolas", 13)).pack(anchor="w", pady=(15, 0))
+        ctk.CTkLabel(tweaks_frame, text="Overwrites free space with junk files to securely erase data.").pack(anchor="w")
+        ctk.CTkButton(tweaks_frame, text="🔐 Run Secure Wipe", command=self.tweak_secure_wipe).pack(anchor="w", pady=5)
+
 
     def show_logs(self):
         self.clear_main_frame()
@@ -297,10 +323,13 @@ class AutotaskerApp(ctk.CTk):
         """, custom_label="Tweak: Add Context Menu")
 
     def tweak_empty_bin(self):
-        if not messagebox.askyesno("Empty Recycle Bin", "This will permanently delete all files in the Recycle Bin. Proceed?"):
-            return
-        self.run_command("Clear-RecycleBin -Force", custom_label="Tweak: Empty Recycle Bin")
-
+        try:
+            if not messagebox.askyesno("Empty Recycle Bin", "This will permanently delete all files in the Recycle Bin. Proceed?"):
+                return
+            self.run_command("Clear-RecycleBin -Force", custom_label="Tweak: Empty Recycle Bin")
+        except Exception as e:
+            self.status_var.set(f"❌ Failed to empty Recycle Bin: {str(e)}")
+            messagebox.showerror("Error", f"Failed to empty Recycle Bin: {str(e)}")
 
     def tweak_clean_temp(self):
         if not messagebox.askyesno("Clean Temp Files", "This will delete temporary files. Proceed?"):
@@ -309,6 +338,10 @@ class AutotaskerApp(ctk.CTk):
         Remove-Item -Path "$env:TEMP\\*" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "C:\\Windows\\Temp\\*" -Recurse -Force -ErrorAction SilentlyContinue
         """, custom_label="Tweak: Clean Temp Files")
+        self.update_status_message("✅ Temp files cleaned successfully!")
+
+    def update_status_message(self, message):
+            self.status_var.set(message)
 
     def tweak_secure_wipe(self):
         level = self.wipe_mode.get()
