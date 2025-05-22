@@ -9,10 +9,9 @@ from tkinter import messagebox
 import psutil
 import platform
 from datetime import datetime
-import security_check
-import cve_report
-
-
+from . import security_check
+from . import cve_report
+from .cve_manager import CVEManager
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -26,6 +25,7 @@ UPDATE_EXECUTABLE_URL = "https://github.com/xd00206/Autotasker/releases/download
 class AutotaskerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+        self.cve_manager = CVEManager()
         self.title("🖥️ Autotasker")
         self.geometry("1100x750")
 
@@ -55,7 +55,7 @@ class AutotaskerApp(ctk.CTk):
             ("📜 Logs", self.show_logs),
             ("⚙️ Settings", self.show_settings),
             ("🛡️ Security Check", lambda: security_check.load_view(self.main_frame, self.update_status_message)),
-            ("🛡️ CVE Scanner", lambda: cve_report.load_view(self.main_frame, self.update_status_message)),
+            ("🛡️ CVE Scanner", lambda: cve_report.load_view(self.main_frame, self.update_status_message, self.cve_manager))
         ]
        
         for label, command in nav_buttons:
